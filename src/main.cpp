@@ -69,7 +69,7 @@ void setup()
   CAN_cfg.rx_pin_id = CAN_RX_id;
   CAN_cfg.rx_queue  = xQueueCreate(rx_queue_size, sizeof(CAN_frame_t)); // Create a queue for data receive
 
-  if(ESP32Can.CANInit()!=OK)
+  if(ESP32Can.CANInit()!=CAN_OK)
   {
     Serial.println(F("CAN ERROR!!!"));
     ESP.restart();
@@ -180,7 +180,7 @@ void RingBuffer_state(CAN_frame_t txMsg)
       /* Send Latitude message */
       txMsg.MsgID = LAT_ID;
 
-      if(ESP32Can.CANWriteFrame(&txMsg)==OK)
+      if(ESP32Can.CANWriteFrame(&txMsg)==CAN_OK)
       {
         //Serial.print("Lat: ");
         //Serial.println(volatile_packet.latitude);
@@ -191,7 +191,7 @@ void RingBuffer_state(CAN_frame_t txMsg)
         txMsg.data.u8[0] = volatile_packet.longitude;
         txMsg.MsgID = LNG_ID;
 
-        if(ESP32Can.CANWriteFrame(&txMsg)==OK)
+        if(ESP32Can.CANWriteFrame(&txMsg)==CAN_OK)
         {
           //Serial.print("Lng: ");
           //Serial.println(volatile_packet.longitude);
