@@ -10,7 +10,7 @@
 /* State Machines */
 typedef enum {IDLE_ST, GPS_ST, DEBUG_ST} state_t;
 
-typedef enum {SENDING, LISTENING} connectivity_states;
+//typedef enum {SENDING, LISTENING} connectivity_states;
 
 unsigned long timer;
 

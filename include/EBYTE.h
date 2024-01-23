@@ -154,10 +154,10 @@ if your unit will not return parameter settings.
 // refer to the data sheet as not all modules support these power levels
 // constants for 1W units
 // (can be different for transmitter and reveiver)
-//#define OPT_TP30 0b00		// 30 db
-//#define OPT_TP27 0b01		// 27 db
-//#define OPT_TP24 0b10		// 24 db
-//#define OPT_TP21 0b11		// 21 db
+#define OPT_TP30 0b00		// 30 db
+#define OPT_TP27 0b01		// 27 db
+#define OPT_TP24 0b10		// 24 db
+#define OPT_TP21 0b11		// 21 db
 
 // constants or 500 mW units
 //#define OPT_TP27 0b00		// 27 db
@@ -167,11 +167,11 @@ if your unit will not return parameter settings.
 //#define OPT_TP17 0b11		// 17 db
 
 // constants or 100 mW units
-#define OPT_TP20 0b00		// 20 db
-#define OPT_TP17 0b01		// 17 db
-#define OPT_TP14 0b10		// 14 db
-#define OPT_TP11 0b11		// 10 db
-#define OPT_TP10 0b11		// 10 db
+// #define OPT_TP20 0b00		// 20 db
+// #define OPT_TP17 0b01		// 17 db
+// #define OPT_TP14 0b10		// 14 db
+// #define OPT_TP11 0b11		// 10 db
+// #define OPT_TP10 0b11		// 10 db
 
 
 

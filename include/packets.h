@@ -6,6 +6,9 @@
 
 #define CLEAR(x) memset(&x, 0x00, 8)
 
+#define MB1_ID  13
+#define MB2_ID  22
+
 typedef struct
 {
     int16_t acc_x;
@@ -20,20 +23,13 @@ typedef struct
     int16_t dps_z;
 } imu_dps_t;
 
-typedef struct 
-{
-    int16_t Roll;
-    int16_t Pitch;
-} Angle_t;
-
 typedef struct
 {
+    int cont;
     /* BMU DATAS */
     float volt;
     uint8_t SOC;
     uint8_t cvt;
-    uint16_t fuel;
-    float current;
     /* REAR DATAS */
     uint8_t temperature;
     uint16_t rpm;
@@ -41,16 +37,12 @@ typedef struct
     /* FRONT DATAS */
     imu_dps_t imu_dps;
     imu_acc_t imu_acc;
-    Angle_t Angle;
     uint16_t speed;
-    /* FLAGS */
-    uint8_t SOT;   // NC | NC | NC | DEVAGAR | PISAR | COMB_STOP | BOX_MSG | ON=1/OF=0
     /* GPS DATAS */
     double latitude;
     double longitude;
     /* DEBUG DATA */
     uint32_t timestamp;
-
 } radio_packet_t;
 
 // Packet constantly saved
