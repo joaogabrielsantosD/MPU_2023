@@ -389,13 +389,16 @@ void RadioStateMachine(void *pvParameters)
     return;
   }
 
-  #ifdef MB1
-    Radio_Config(MB1_ID);
-  #endif
-
-  #ifdef MB2
-    Radio_Config(MB2_ID);
-  #endif
+  LoRa.SetAddressH(1);
+  LoRa.SetAddressL(1);
+  LoRa.SetChannel(CAR_ID);
+  LoRa.SetAirDataRate(ADR_1200); 
+  LoRa.SetTransmitPower(OPT_TP30); 
+  LoRa.SetMode(MODE_NORMAL);
+  LoRa.SetUARTBaudRate(UDR_9600);
+  LoRa.SetFECMode(OPT_FECENABLE);
+  LoRa.SaveParameters(PERMANENT);
+  //LoRa.PrintParameters();
 
   while(1)
   {
@@ -410,20 +413,6 @@ void RadioStateMachine(void *pvParameters)
 
     vTaskDelay(1);
   }
-}
-
-void Radio_Config(int ID_Channel)
-{
-  LoRa.SetAddressH(1);
-  LoRa.SetAddressL(1);
-  LoRa.SetChannel(ID_Channel);
-  LoRa.SetAirDataRate(ADR_1200); 
-  LoRa.SetTransmitPower(OPT_TP30); 
-  LoRa.SetMode(MODE_NORMAL);
-  LoRa.SetUARTBaudRate(UDR_9600);
-  LoRa.SetFECMode(OPT_FECENABLE);
-  LoRa.SaveParameters(PERMANENT);
-  //LoRa.PrintParameters();
 }
 
 /* Interrupts routine */
