@@ -62,6 +62,6 @@ typedef enum {CAN_OK= 0, CAN_FAIL= -1} CAN_status_t;
 
 CAN_device_t CAN_cfg;             // CAN Config
 unsigned long previousMillis = 0; // will store last time a CAN Message was send
-const int rx_queue_size = 4096;   // Receive Queue size
+const int rx_queue_size = 1024;   // Receive Queue size
 
 #endif

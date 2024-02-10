@@ -19,7 +19,7 @@
   #define CAR_ID MB2_ID
 #endif
 
-/*GPS TOOLS*/
+/* GPS TOOLS */
 TinyGPSPlus gps;
 
 /* ESP TOOLS */
@@ -402,12 +402,11 @@ void RadioStateMachine(void *pvParameters)
 
   while(1)
   {
-    //Serial.println("Radio state");
     if(_radio_flag)
     {
       LoRa.SendStruct(&volatile_packet, sizeof(volatile_packet));
       volatile_packet.cont++;
-
+  
       _radio_flag = false;
     }
 
@@ -419,6 +418,7 @@ void RadioStateMachine(void *pvParameters)
 void ticker400mHzISR()
 {
   state_buffer.push(GPS_ST);
+  //state_buffer.push(DEBUG_ST);
 }
 
 void ticker40HzISR()
