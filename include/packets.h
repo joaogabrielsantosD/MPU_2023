@@ -25,7 +25,7 @@ typedef struct
 
 typedef struct
 {
-    int cont;
+    //int cont;
     /* BMU DATAS */
     float volt;
     uint8_t SOC;
