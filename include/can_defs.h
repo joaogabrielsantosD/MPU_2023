@@ -54,14 +54,8 @@ typedef struct
 } packet_t;
 
 /* DEV DEFINITIONS */
-#include <ESP32CAN.h>
-#include <CAN_config.h>
 #include "hard_defs.h"
 
-typedef enum {CAN_OK= 0, CAN_FAIL= -1} CAN_status_t;
-
-CAN_device_t CAN_cfg;             // CAN Config
-unsigned long previousMillis = 0; // will store last time a CAN Message was send
-const int rx_queue_size = 1024;   // Receive Queue size
+#define CAN CAN0
 
 #endif
