@@ -16,8 +16,8 @@
 #define LoRa_Baud_Rate  9600
 
 /* CAN definitions */
-#define CAN_TX_id       GPIO_NUM_13
-#define CAN_RX_id       GPIO_NUM_15
+#define CAN_TX_id       GPIO_NUM_15
+#define CAN_RX_id       GPIO_NUM_13
 
 /*GPS definitions*/
 #define GPS_uart        Serial1
