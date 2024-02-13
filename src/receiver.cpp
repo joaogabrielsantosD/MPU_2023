@@ -68,18 +68,18 @@ void loop()
     /* Write in Serial */
     memcpy(&data, (uint8_t *)&volatile_packet, sizeof(volatile_packet));
 
-    Serial.write(CAR_ID);
+    //Serial.write(CAR_ID);
 
-    for(int i = 0; i < sizeof(data); i++)
-    {
-      Serial.write(data[i]);
-    }
+    //for(int i = 0; i < sizeof(data); i++)
+    //{
+    //  Serial.write(data[i]);
+    //}
 
-    Serial.write(0xff); // Flag to end the packet
+    //Serial.write(0xff); // Flag to end the packet
 
     sdSave();
 
-    /*
+
     Serial.println("----------------------------------------");
     Serial.print("Acc X: ");          Serial.println(volatile_packet.imu_acc.acc_x);
     Serial.print("Acc Y: ");          Serial.println(volatile_packet.imu_acc.acc_y);
@@ -96,9 +96,10 @@ void loop()
     Serial.print("VOLT: ");           Serial.println(volatile_packet.volt);
     Serial.print("LATITUDE: ");       Serial.println(volatile_packet.latitude);
     Serial.print("LONGITUDE: ");      Serial.println(volatile_packet.longitude);
-    Serial.print("Times: ");          Serial.println(volatile_packet.timestamp);
+    //Serial.print("FUEL LEVEL: ");     Serial.println(volatile_packet.fuel_level);
+    Serial.print("Timestamp: ");      Serial.println(volatile_packet.timestamp);
     Serial.println("----------------------------------------");
-    */
+  
 
     vTaskDelay(20);
   }

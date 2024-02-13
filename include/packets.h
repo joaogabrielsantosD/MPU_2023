@@ -26,21 +26,19 @@ typedef struct
 typedef struct
 {
     //int cont;
-    /* REAR DATAS */
-    float volt;
-    uint8_t SOC;
-    uint8_t cvt;
-    uint8_t temperature;
-    /* FRONT DATAS */
-    uint8_t flags; // MSB - BOX | BUFFER FULL | NC | NC | FUEL_LEVEL | SERVO_ERROR | CHK | RUN - LSB
-    imu_dps_t imu_dps;
+    /* Mangue Telemetry Struct */
     imu_acc_t imu_acc;
+    imu_dps_t imu_dps;
     uint16_t rpm;
     uint16_t speed;
-    /* GPS DATAS */
+    uint8_t temperature;
+    uint8_t flags; // MSB - BOX | BUFFER FULL | NC | NC | FUEL_LEVEL | SERVO_ERROR | CHK | RUN - LSB
+    uint8_t SOC;
+    uint8_t cvt;
+    float volt;
     double latitude;
     double longitude;
-    /* DEBUG DATA */
+    //uint16_t fuel_level;
     uint32_t timestamp;
 } radio_packet_t;
 
