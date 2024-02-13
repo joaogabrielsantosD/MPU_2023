@@ -10,6 +10,8 @@
 #include "can_defs.h"
 #include "MPU_defs.h"
 
+#define GPS_DEBUG
+
 #define MB1 // Uncomment a line if it is your car choice
 //#define MB2 // Uncomment a line if it is your car choice
 
@@ -21,21 +23,20 @@
   #define CAR_ID MB2_ID
 #endif
 
-/* GPS TOOLS */
+/* TOOLS */
 TinyGPSPlus gps;
+EBYTE LoRa(&LoRaUART, PIN_M0, PIN_M1, PIN_AUX);
 
 /* ESP TOOLS */
+CAN_FRAME txMsg;
 CircularBuffer<state_t, BUFFER_SIZE/2> state_buffer;
 Ticker ticker400mHz;
 Ticker ticker40Hz;
-
-EBYTE LoRa(&LoRaUART, PIN_M0, PIN_M1, PIN_AUX);
 
 /* Debug variables */
 bool buffer_full = false;
 bool GPS_ok = false;
 bool mode = false;
-int cont = 0;
 /* Global variables */
 state_t current_state = IDLE_ST;
 typedef struct {uint16_t day=0, month=0, year=0;} Date_acq_t; 
@@ -67,6 +68,9 @@ void setup()
   CAN.begin(CAN_BPS_1000K);
   CAN.watchFor();
   CAN.setCallback(0, canISR);
+  txMsg.length = 8;
+  txMsg.extended = 0; 
+  txMsg.rtr = 0;
 
   setupVolatilePacket(); // volatile packet default values
 
@@ -97,11 +101,9 @@ void loop()
     case RADIO_ST:
       //Serial.println("Radio");
 
-      if(LoRa.SendStruct(&volatile_packet, sizeof(volatile_packet)))
-      {
-        cont++;
-        //Serial.println(cont);
-      }
+      LoRa.SendStruct(&volatile_packet, sizeof(volatile_packet));
+      //if(LoRa.SendStruct(&volatile_packet, sizeof(volatile_packet)))
+        //Serial.println("ok");
 
       break;
 
@@ -114,51 +116,43 @@ void loop()
           GPS_ok = gpsInfo();         
       }
 
-      if(GPS_ok)
-      {
+
+      #ifdef GPS_DEBUG
         /* Send latitude message */
-
-        /* Send longitude message if latitude is successful */
-
-        GPS_ok = false;
-      }
+        txMsg.id = LAT_ID;
+        txMsg.data.uint8[0] = volatile_packet.latitude;
+        if(CAN.sendFrame(txMsg))
+        {
+          /* Send longitude message if latitude is successful */
+          txMsg.id = LNG_ID;
+          txMsg.data.uint8[0] = volatile_packet.longitude;
+          CAN.sendFrame(txMsg);
+        }
+      #else
+        /* Send latitude message */
+        txMsg.id = LAT_ID;
+        txMsg.data.uint8[0] = volatile_packet.latitude;
+        if(CAN.sendFrame(txMsg))
+        {
+          /* Send longitude message if latitude is successful */
+          txMsg.id = LNG_ID;
+          txMsg.data.uint8[0] = volatile_packet.longitude;
+          CAN.sendFrame(txMsg);
+        }
+      #endif
       
       break;
 
     case DEBUG_ST:
       //Serial.println("Debug state");
-      
-      //Serial.printf("Latitude (LAT): %lf\r\n", volatile_packet.latitude);
-      //Serial.printf("Longitude (LNG): %lf\r\n", volatile_packet.longitude);
-      //Serial.printf("Packages sent: %d\r\n", cont);
+      //Serial.printf("Latitude (LAT) = %lf\r\n", volatile_packet.latitude);
+      //Serial.printf("Longitude (LNG) = %lf\r\n", volatile_packet.longitude);
       //Serial.println("\n\n");
-
       break;
   }
 }
 
 /* Setup Functions */
-void setupVolatilePacket()
-{
-  //volatile_packet.cont          = 0;
-  volatile_packet.imu_acc.acc_x = 0;
-  volatile_packet.imu_acc.acc_y = 0;
-  volatile_packet.imu_acc.acc_z = 0;
-  volatile_packet.imu_dps.dps_x = 0;
-  volatile_packet.imu_dps.dps_y = 0;
-  volatile_packet.imu_dps.dps_z = 0;
-  volatile_packet.rpm           = 0;
-  volatile_packet.speed         = 0;
-  volatile_packet.temperature   = 0;
-  volatile_packet.flags         = 0;
-  volatile_packet.SOC           = 0;
-  volatile_packet.cvt           = 0;
-  volatile_packet.volt          = 0;
-  volatile_packet.latitude      = 0; 
-  volatile_packet.longitude     = 0; 
-  volatile_packet.timestamp     = 0;
-}
-
 void pinConfig()
 {
   // Pins 
@@ -185,6 +179,27 @@ void RadioInit()
   LoRa.SetFECMode(OPT_FECENABLE);
   LoRa.SaveParameters(PERMANENT);
   //LoRa.PrintParameters();
+}
+
+void setupVolatilePacket()
+{
+  //volatile_packet.cont          = 0;
+  volatile_packet.imu_acc.acc_x = 0;
+  volatile_packet.imu_acc.acc_y = 0;
+  volatile_packet.imu_acc.acc_z = 0;
+  volatile_packet.imu_dps.dps_x = 0;
+  volatile_packet.imu_dps.dps_y = 0;
+  volatile_packet.imu_dps.dps_z = 0;
+  volatile_packet.rpm           = 0;
+  volatile_packet.speed         = 0;
+  volatile_packet.temperature   = 0;
+  volatile_packet.flags         = 0;
+  volatile_packet.SOC           = 0;
+  volatile_packet.cvt           = 0;
+  volatile_packet.volt          = 0;
+  volatile_packet.latitude      = 0; 
+  volatile_packet.longitude     = 0; 
+  volatile_packet.timestamp     = 0;
 }
 
 /* Global Functions */
@@ -223,6 +238,64 @@ void canISR(CAN_FRAME *rxMsg)
 {
   mode = !mode;
   digitalWrite(EMBEDDED_LED, mode);
+
+  if(rxMsg->id==VOLTAGE_ID)
+  {
+    memcpy(&volatile_packet.volt, (float *)rxMsg->data.uint8, sizeof(float));
+    //Serial.printf("Volt = %f\r\n", volatile_packet.volt);
+  }
+
+  if(rxMsg->id==SOC_ID)
+  {
+    memcpy(&volatile_packet.SOC, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("SOC = %d\r\n", volatile_packet.SOC);
+  }
+
+  if(rxMsg->id==CVT_ID)
+  {
+    memcpy(&volatile_packet.cvt, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("CVT = %d\r\n", volatile_packet.cvt);
+  }
+
+  if(rxMsg->id==TEMPERATURE_ID)
+  {
+    memcpy(&volatile_packet.temperature, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("Motor = %d\r\n", volatile_packet.temperature);
+  }
+
+  if(rxMsg->id==FLAGS_ID)
+  {
+    memcpy(&volatile_packet.flags, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("Flags = %d\r\n", volatile_packet.flags);
+  }
+
+  if(rxMsg->id==IMU_ACC_ID)
+  {
+    memcpy(&volatile_packet.imu_acc, (imu_acc_t *)rxMsg->data.uint8, sizeof(imu_acc_t));
+    //Serial.printf("ACC Z = %f\r\n", (float)((volatile_packet.imu_acc.acc_z*0.061)/1000));
+    //Serial.printf("ACC X = %f\r\n", (float)((volatile_packet.imu_acc.acc_x*0.061)/1000));
+    //Serial.printf("ACC Y = %f\r\n", (float)((volatile_packet.imu_acc.acc_y*0.061)/1000));
+  }
+
+  if(rxMsg->id==IMU_DPS_ID)
+  {
+    memcpy(&volatile_packet.imu_dps, (imu_dps_t *)rxMsg->data.uint8, sizeof(imu_dps_t));
+    //Serial.printf("DPS X = %d\r\n", volatile_packet.imu_dps.dps_x);
+    //Serial.printf("DPS Y = %d\r\n", volatile_packet.imu_dps.dps_y);
+    //Serial.printf("DPS Z = %d\r\n", volatile_packet.imu_dps.dps_z);
+  }  
+
+  if(rxMsg->id==RPM_ID)
+  {
+    memcpy(&volatile_packet.rpm, (uint16_t *)rxMsg->data.uint8, sizeof(uint16_t));
+    //Serial.printf("RPM = %d\r\n", volatile_packet.rpm);
+  }
+
+  if(rxMsg->id==SPEED_ID)
+  {
+    memcpy(&volatile_packet.speed, (uint16_t *)rxMsg->data.uint8, sizeof(uint16_t));
+    //Serial.printf("Speed = %d\r\n", volatile_packet.speed);
+  }
 }
 
 void ticker400mHzISR()
