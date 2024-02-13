@@ -129,25 +129,31 @@ void loop()
           CAN.sendFrame(txMsg);
         }
       #else
-        /* Send latitude message */
-        txMsg.id = LAT_ID;
-        txMsg.data.uint8[0] = volatile_packet.latitude;
-        if(CAN.sendFrame(txMsg))
+        if(GPS_ok)
         {
-          /* Send longitude message if latitude is successful */
-          txMsg.id = LNG_ID;
-          txMsg.data.uint8[0] = volatile_packet.longitude;
-          CAN.sendFrame(txMsg);
+          /* Send latitude message */
+          txMsg.id = LAT_ID;
+          txMsg.data.uint8[0] = volatile_packet.latitude;
+          if(CAN.sendFrame(txMsg))
+          {
+            /* Send longitude message if latitude is successful */
+            txMsg.id = LNG_ID;
+            txMsg.data.uint8[0] = volatile_packet.longitude;
+            CAN.sendFrame(txMsg);
+          }
+
+          GPS_ok = false;
         }
       #endif
       
       break;
 
     case DEBUG_ST:
-      //Serial.println("Debug state");
-      //Serial.printf("Latitude (LAT) = %lf\r\n", volatile_packet.latitude);
-      //Serial.printf("Longitude (LNG) = %lf\r\n", volatile_packet.longitude);
-      //Serial.println("\n\n");
+      Serial.println("Debug state");
+      Serial.printf("Latitude (LAT) = %lf\r\n", volatile_packet.latitude);
+      Serial.printf("Longitude (LNG) = %lf\r\n", volatile_packet.longitude);
+      digitalWrite(LED_BUILTIN, GPS_ok);
+      Serial.println("\n\n");
       break;
   }
 }
@@ -239,35 +245,7 @@ void canISR(CAN_FRAME *rxMsg)
   mode = !mode;
   digitalWrite(EMBEDDED_LED, mode);
 
-  if(rxMsg->id==VOLTAGE_ID)
-  {
-    memcpy(&volatile_packet.volt, (float *)rxMsg->data.uint8, sizeof(float));
-    //Serial.printf("Volt = %f\r\n", volatile_packet.volt);
-  }
-
-  if(rxMsg->id==SOC_ID)
-  {
-    memcpy(&volatile_packet.SOC, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
-    //Serial.printf("SOC = %d\r\n", volatile_packet.SOC);
-  }
-
-  if(rxMsg->id==CVT_ID)
-  {
-    memcpy(&volatile_packet.cvt, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
-    //Serial.printf("CVT = %d\r\n", volatile_packet.cvt);
-  }
-
-  if(rxMsg->id==TEMPERATURE_ID)
-  {
-    memcpy(&volatile_packet.temperature, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
-    //Serial.printf("Motor = %d\r\n", volatile_packet.temperature);
-  }
-
-  if(rxMsg->id==FLAGS_ID)
-  {
-    memcpy(&volatile_packet.flags, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
-    //Serial.printf("Flags = %d\r\n", volatile_packet.flags);
-  }
+  volatile_packet.timestamp = millis();
 
   if(rxMsg->id==IMU_ACC_ID)
   {
@@ -283,7 +261,7 @@ void canISR(CAN_FRAME *rxMsg)
     //Serial.printf("DPS X = %d\r\n", volatile_packet.imu_dps.dps_x);
     //Serial.printf("DPS Y = %d\r\n", volatile_packet.imu_dps.dps_y);
     //Serial.printf("DPS Z = %d\r\n", volatile_packet.imu_dps.dps_z);
-  }  
+  } 
 
   if(rxMsg->id==RPM_ID)
   {
@@ -296,12 +274,48 @@ void canISR(CAN_FRAME *rxMsg)
     memcpy(&volatile_packet.speed, (uint16_t *)rxMsg->data.uint8, sizeof(uint16_t));
     //Serial.printf("Speed = %d\r\n", volatile_packet.speed);
   }
+
+  if(rxMsg->id==TEMPERATURE_ID)
+  {
+    memcpy(&volatile_packet.temperature, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("Motor = %d\r\n", volatile_packet.temperature);
+  }
+
+  if(rxMsg->id==FLAGS_ID)
+  {
+    memcpy(&volatile_packet.flags, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("Flags = %d\r\n", volatile_packet.flags);
+  }
+
+  if(rxMsg->id==SOC_ID)
+  {
+    memcpy(&volatile_packet.SOC, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("SOC = %d\r\n", volatile_packet.SOC);
+  }
+
+  if(rxMsg->id==CVT_ID)
+  {
+    memcpy(&volatile_packet.cvt, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("CVT = %d\r\n", volatile_packet.cvt);
+  }
+
+  if(rxMsg->id==VOLTAGE_ID)
+  {
+    memcpy(&volatile_packet.volt, (float *)rxMsg->data.uint8, sizeof(float));
+    //Serial.printf("Volt = %f\r\n", volatile_packet.volt);
+  }
+
+  //if(rxMsg->id==FUEL_ID)
+  //{
+  //  memcpy(&volatile_packet.fuel_level, (uint16_t *)rxMsg->data.uint8, sizeof(uint16_t));
+  //  //Serial.printf("Fuel Level = %d\r\n", volatile_packet.fuel_level);
+  //}
 }
 
 void ticker400mHzISR()
 {
   state_buffer.push(GPS_ST);
-  //state_buffer.push(DEBUG_ST);
+  state_buffer.push(DEBUG_ST);
 }
 
 void ticker40HzISR()
