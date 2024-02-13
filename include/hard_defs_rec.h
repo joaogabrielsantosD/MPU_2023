@@ -1,10 +1,8 @@
 #ifndef HARD_DEFS_H
 #define HARD_DEFS_H
 
-/*============================*/
-    #include <Arduino.h>
-    #include <driver/gpio.h>
-/*============================*/
+#include <Arduino.h>
+#include <driver/gpio.h>
 
 #define EMBEDDED_LED LED_BUILTIN
 
