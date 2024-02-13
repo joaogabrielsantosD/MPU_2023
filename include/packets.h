@@ -6,7 +6,7 @@
 
 #define CLEAR(x) memset(&x, 0x00, 8)
 
-#define MB1_ID  13
+#define MB1_ID  11
 #define MB2_ID  22
 
 typedef struct
@@ -26,17 +26,16 @@ typedef struct
 typedef struct
 {
     //int cont;
-    /* BMU DATAS */
+    /* REAR DATAS */
     float volt;
     uint8_t SOC;
     uint8_t cvt;
-    /* REAR DATAS */
     uint8_t temperature;
-    uint16_t rpm;
-    uint8_t flags; // MSB - BOX | BUFFER FULL | NC | NC | FUEL_LEVEL | SERVO_ERROR | CHK | RUN - LSB
     /* FRONT DATAS */
+    uint8_t flags; // MSB - BOX | BUFFER FULL | NC | NC | FUEL_LEVEL | SERVO_ERROR | CHK | RUN - LSB
     imu_dps_t imu_dps;
     imu_acc_t imu_acc;
+    uint16_t rpm;
     uint16_t speed;
     /* GPS DATAS */
     double latitude;
