@@ -23,15 +23,17 @@
   #define CAR_ID MB2_ID
 #endif
 
-/* TOOLS */
+/* GPS tool */
 TinyGPSPlus gps;
+
+/* Radio LoRa tool */
 EBYTE LoRa(&LoRaUART, PIN_M0, PIN_M1, PIN_AUX);
 
 /* ESP TOOLS */
 CAN_FRAME txMsg;
 CircularBuffer<state_t, BUFFER_SIZE/2> state_buffer;
 Ticker ticker400mHz;
-Ticker ticker40Hz;
+Ticker ticker1Hz;
 
 /* Debug variables */
 bool buffer_full = false;
@@ -46,7 +48,7 @@ Date_acq_t Date_acq;
 /* Interrupts routine */
 void canISR(CAN_FRAME *rxMsg);
 void ticker400mHzISR();
-void ticker40HzISR();
+void ticker1HzISR();
 /* Setup Functions */
 void setupVolatilePacket();
 void pinConfig();
@@ -75,7 +77,7 @@ void setup()
   setupVolatilePacket(); // volatile packet default values
 
   ticker400mHz.attach(2.5, ticker400mHzISR);
-  ticker40Hz.attach(0.025, ticker40HzISR);
+  ticker1Hz.attach(1.0, ticker1HzISR);
 }
 
 void loop()
@@ -149,11 +151,10 @@ void loop()
       break;
 
     case DEBUG_ST:
-      Serial.println("Debug state");
-      Serial.printf("Latitude (LAT) = %lf\r\n", volatile_packet.latitude);
-      Serial.printf("Longitude (LNG) = %lf\r\n", volatile_packet.longitude);
-      digitalWrite(LED_BUILTIN, GPS_ok);
-      Serial.println("\n\n");
+      //Serial.println("Debug state");
+      //Serial.printf("Latitude (LAT) = %lf\r\n", volatile_packet.latitude);
+      //Serial.printf("Longitude (LNG) = %lf\r\n", volatile_packet.longitude);
+      //Serial.println("\n\n");
       break;
   }
 }
@@ -261,7 +262,7 @@ void canISR(CAN_FRAME *rxMsg)
     //Serial.printf("DPS X = %d\r\n", volatile_packet.imu_dps.dps_x);
     //Serial.printf("DPS Y = %d\r\n", volatile_packet.imu_dps.dps_y);
     //Serial.printf("DPS Z = %d\r\n", volatile_packet.imu_dps.dps_z);
-  } 
+  }
 
   if(rxMsg->id==RPM_ID)
   {
@@ -303,22 +304,16 @@ void canISR(CAN_FRAME *rxMsg)
   {
     memcpy(&volatile_packet.volt, (float *)rxMsg->data.uint8, sizeof(float));
     //Serial.printf("Volt = %f\r\n", volatile_packet.volt);
-  }
-
-  //if(rxMsg->id==FUEL_ID)
-  //{
-  //  memcpy(&volatile_packet.fuel_level, (uint16_t *)rxMsg->data.uint8, sizeof(uint16_t));
-  //  //Serial.printf("Fuel Level = %d\r\n", volatile_packet.fuel_level);
-  //}
+  }  
 }
 
 void ticker400mHzISR()
 {
   state_buffer.push(GPS_ST);
-  state_buffer.push(DEBUG_ST);
+  //state_buffer.push(DEBUG_ST);
 }
 
-void ticker40HzISR()
+void ticker1HzISR()
 {
   state_buffer.push(RADIO_ST);
 } 
