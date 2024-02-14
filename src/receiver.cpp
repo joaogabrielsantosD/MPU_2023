@@ -19,8 +19,7 @@
 EBYTE Lora(&LoRaUART, PIN_M0, PIN_M1, PIN_AUX);
 
 /* Global variables */
-File root;
-File dataFile;
+File root, dataFile;
 uint8_t data[sizeof(radio_packet_t)];
 char file_name[20];
 
@@ -101,7 +100,7 @@ void loop()
     Serial.println("----------------------------------------");
   
 
-    vTaskDelay(20);
+    vTaskDelay(10);
   }
 
   else
@@ -115,20 +114,20 @@ bool sdConfig()
 {
   if(!SD.begin(SD_CS)) return false;
 
-    root = SD.open("/");
-    int num_files = countFiles(root);
-    sprintf(file_name, "/%s%d.csv", "data", num_files+1);
+  root = SD.open("/");
+  int num_files = countFiles(root);
+  sprintf(file_name, "/%s%d.csv", "data", num_files+1);
 
-    dataFile = SD.open(file_name, FILE_APPEND);
+  dataFile = SD.open(file_name, FILE_APPEND);
 
-    if(dataFile)
-    {
-      dataFile.println("ACCx,ACCy,ACCz,DPSx,DPSy,DPSz,rpm,speed,motor,flags,SOC,cvt,volt,LAT,LNG,timestamp");
-      dataFile.close();
-      return true;
-    } 
-    
-    else return false;
+  if(dataFile)
+  {
+    dataFile.println("ACCx,ACCy,ACCz,DPSx,DPSy,DPSz,rpm,speed,motor,flags,SOC,cvt,volt,LAT,LNG,timestamp");
+    dataFile.close();
+    return true;
+  } 
+  
+  else return false;
 }
 
 int countFiles(File dir)
