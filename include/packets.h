@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define CLEAR(x) memset(&x, 0x00, 8)
-
 #define MB1_ID  11
 #define MB2_ID  22
 
