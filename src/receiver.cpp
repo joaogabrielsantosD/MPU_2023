@@ -22,6 +22,7 @@ EBYTE Lora(&LoRaUART, PIN_M0, PIN_M1, PIN_AUX);
 File root, dataFile;
 uint8_t data[sizeof(radio_packet_t)];
 char file_name[20];
+unsigned long Last = 0;
 
 /* Global Functions */
 bool sdConfig();
@@ -51,7 +52,7 @@ void setup()
   Lora.SetUARTBaudRate(UDR_9600);
   Lora.SetFECMode(OPT_FECENABLE);
   Lora.SaveParameters(PERMANENT);
-  Lora.PrintParameters();
+  //Lora.PrintParameters();
 
   memset(&volatile_packet, 0x00, sizeof(volatile_packet));
 }
@@ -67,18 +68,18 @@ void loop()
     /* Write in Serial */
     memcpy(&data, (uint8_t *)&volatile_packet, sizeof(volatile_packet));
 
-    //Serial.write(CAR_ID);
+    Serial.write(CAR_ID);
 
-    //for(int i = 0; i < sizeof(data); i++)
-    //{
-    //  Serial.write(data[i]);
-    //}
+    for(int i = 0; i < sizeof(data); i++)
+    {
+      Serial.write(data[i]);
+    }
 
-    //Serial.write(0xff); // Flag to end the packet
+    Serial.write(0xff); // Flag to end the packet
 
     sdSave();
 
-
+    /*
     Serial.println("----------------------------------------");
     Serial.print("Acc X: ");          Serial.println(volatile_packet.imu_acc.acc_x);
     Serial.print("Acc Y: ");          Serial.println(volatile_packet.imu_acc.acc_y);
@@ -98,13 +99,18 @@ void loop()
     //Serial.print("FUEL LEVEL: ");     Serial.println(volatile_packet.fuel_level);
     Serial.print("Timestamp: ");      Serial.println(volatile_packet.timestamp);
     Serial.println("----------------------------------------");
-  
+    */
 
     vTaskDelay(10);
   }
 
   else
   {
+    if((millis() - Last) > 1000)
+    {
+      //Serial.printf("Searching: \n");
+      Last = millis();
+    }
     digitalWrite(LED_BUILTIN, LOW);
   }
 }
@@ -174,7 +180,6 @@ String packetToString()
     str += ",";
     str += String(volatile_packet.imu_dps.dps_z);
     str += ",";
-
     str += String(volatile_packet.rpm);
     str += ",";
     str += String(volatile_packet.speed);
