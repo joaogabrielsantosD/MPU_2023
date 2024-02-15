@@ -32,7 +32,7 @@ EBYTE LoRa(&LoRaUART, PIN_M0, PIN_M1, PIN_AUX);
 /* ESP TOOLS */
 CAN_FRAME txMsg;
 CircularBuffer<state_t, BUFFER_SIZE/2> state_buffer;
-Ticker ticker400mHz;
+Ticker ticker500mHz;
 Ticker ticker1Hz;
 
 /* Debug variables */
@@ -47,7 +47,7 @@ Date_acq_t Date_acq;
  
 /* Interrupts routine */
 void canISR(CAN_FRAME *rxMsg);
-void ticker400mHzISR();
+void ticker500mHzISR();
 void ticker1HzISR();
 /* Setup Functions */
 void setupVolatilePacket();
@@ -76,7 +76,7 @@ void setup()
 
   setupVolatilePacket(); // volatile packet default values
 
-  ticker400mHz.attach(2.5, ticker400mHzISR);
+  ticker500mHz.attach(2.0, ticker500mHzISR);
   ticker1Hz.attach(1.0, ticker1HzISR);
 }
 
@@ -307,7 +307,7 @@ void canISR(CAN_FRAME *rxMsg)
   }  
 }
 
-void ticker400mHzISR()
+void ticker500mHzISR()
 {
   state_buffer.push(GPS_ST);
   //state_buffer.push(DEBUG_ST);
