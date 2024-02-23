@@ -10,8 +10,6 @@
 #include "can_defs.h"
 #include "MPU_defs.h"
 
-#define GPS_DEBUG
-
 #define MB1 // Uncomment a line if it is your car choice
 //#define MB2 // Uncomment a line if it is your car choice
 
@@ -37,7 +35,6 @@ Ticker ticker1Hz;
 
 /* Debug variables */
 bool buffer_full = false;
-bool GPS_ok = false;
 bool mode = false;
 /* Global variables */
 state_t current_state = IDLE_ST;
@@ -54,7 +51,7 @@ void setupVolatilePacket();
 void pinConfig();
 void RadioInit();
 /* Global Functions */
-bool gpsInfo();
+void gpsInfo();
 
 void setup() 
 {
@@ -115,11 +112,9 @@ void loop()
       while(GPS_uart.available() > 0)
       {
         if(gps.encode(GPS_uart.read()))
-          GPS_ok = gpsInfo();         
+          gpsInfo();         
       }
 
-
-      #ifdef GPS_DEBUG
         /* Send latitude message */
         txMsg.id = LAT_ID;
         txMsg.data.uint8[0] = volatile_packet.latitude;
@@ -130,23 +125,6 @@ void loop()
           txMsg.data.uint8[0] = volatile_packet.longitude;
           CAN.sendFrame(txMsg);
         }
-      #else
-        if(GPS_ok)
-        {
-          /* Send latitude message */
-          txMsg.id = LAT_ID;
-          txMsg.data.uint8[0] = volatile_packet.latitude;
-          if(CAN.sendFrame(txMsg))
-          {
-            /* Send longitude message if latitude is successful */
-            txMsg.id = LNG_ID;
-            txMsg.data.uint8[0] = volatile_packet.longitude;
-            CAN.sendFrame(txMsg);
-          }
-
-          GPS_ok = false;
-        }
-      #endif
       
       break;
 
@@ -210,24 +188,18 @@ void setupVolatilePacket()
 }
 
 /* Global Functions */
-bool gpsInfo()
+void gpsInfo()
 {
-  bool status = false;
-
   if(gps.location.isValid())
   {
     volatile_packet.latitude = gps.location.lat();
     volatile_packet.longitude = gps.location.lng();
-
-    status = true;
   }
 
   else
   {
     volatile_packet.latitude = 0;
     volatile_packet.longitude = 0;
-
-    status = false;
   }
 
   if(gps.date.isValid())
@@ -236,8 +208,6 @@ bool gpsInfo()
     Date_acq.month = gps.date.month();
     Date_acq.day = gps.date.day();
   }
-
-  return status;
 }
 
 /* Interrupts routine */
