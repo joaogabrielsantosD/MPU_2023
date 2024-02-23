@@ -1,5 +1,5 @@
-#ifndef PACKETS_H_
-#define PACKETS_H_
+#ifndef PACKETS_H
+#define PACKETS_H
 
 #include <stdio.h>
 #include <string.h>

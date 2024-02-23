@@ -1,5 +1,5 @@
-#ifndef CAN_DEFS_H_
-#define CAN_DEFS_H_
+#ifndef CAN_DEFS_H
+#define CAN_DEFS_H
 
 /* IDs */
 #define BUFFER_SIZE     50
