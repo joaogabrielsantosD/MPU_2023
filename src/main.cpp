@@ -38,8 +38,6 @@ bool buffer_full = false;
 bool mode = false;
 /* Global variables */
 state_t current_state = IDLE_ST;
-typedef union {Time_acq_t time_acq; Date_acq_t Date_acq;} gps_acq_t; 
-gps_acq_t gps_acq;
 //const int Channel = 0x0F;
  
 /* Interrupts routine */
@@ -132,9 +130,11 @@ void loop()
       //Serial.println("Debug state");
       //Serial.printf("Latitude (LAT) = %lf\r\n", volatile_packet.latitude);
       //Serial.printf("Longitude (LNG) = %lf\r\n", volatile_packet.longitude);
-      //Serial.printf("Time: %dh:%dm:%ds\r\n", gps_acq.time_acq.hour, gps_acq.time_acq.minute, gps_acq.time_acq.second);
-      //Serial.printf("Date: %d/%d/%d\r\n", gps_acq.Date_acq.day, gps_acq.Date_acq.month, gps_acq.Date_acq.year);
-      //Serial.printf("Satellites = %d\r\n", volatile_packet.satellites);
+      //(gps.time.isValid() ? Serial.printf("Time: %dh:%dm:%ds", gps.time.hour(), gps.time.minute(), gps.time.second()) \
+      : Serial.println("Time: 0h:0m:0s")); 
+      //(gps.date.isValid() ? Serial.printf("Date: %d/%d/%d", gps.date.day(), gps.date.month(), gps.date.year()) \
+      : Serial.println("Date: 0/0/0"));
+      //Serial.printf("Satellites = %d\r\n", (gps.satellites.isValid() ? gps.satellites.value() : 0));
       //Serial.println("\n\n");
       break;
   }
@@ -188,7 +188,6 @@ void setupVolatilePacket()
   volatile_packet.latitude      = 0; 
   volatile_packet.longitude     = 0; 
   volatile_packet.timestamp     = 0;
-  volatile_packet.satellites    = 0;
 }
 
 /* Global Functions */
@@ -204,26 +203,7 @@ void gpsInfo()
   {
     volatile_packet.latitude = 0;
     volatile_packet.longitude = 0;
-  }
-
-  if(gps.time.isValid())
-  {
-    gps_acq.time_acq.second = gps.time.second();
-    gps_acq.time_acq.minute = gps.time.minute();
-    gps_acq.time_acq.hour = gps.time.hour();
-  }
-
-  if(gps.date.isValid())
-  {
-    gps_acq.Date_acq.day = gps.date.day();
-    gps_acq.Date_acq.month = gps.date.month();
-    gps_acq.Date_acq.year = gps.date.year();
-  }
-
-  if(gps.satellites.isValid())
-    volatile_packet.satellites = gps.satellites.value();
-  else
-    volatile_packet.satellites = 0; 
+  }  
 }
 
 /* Interrupts routine */
