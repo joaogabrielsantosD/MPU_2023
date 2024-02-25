@@ -16,11 +16,11 @@
 #define LoRa_Baud_Rate  9600
 
 /* SD */ 
-#define SD_CS         GPIO_NUM_5 
+#define SD_CS           GPIO_NUM_5 
 // SPI BUS
 // VSPI
-#define MISO          GPIO_NUM_19
-#define MOSI          GPIO_NUM_23
-#define SCK           GPIO_NUM_18
+#define MISO            GPIO_NUM_19
+#define MOSI            GPIO_NUM_23
+#define SCK             GPIO_NUM_18
 
 #endif
