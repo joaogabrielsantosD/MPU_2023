@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <driver/gpio.h>
 
-#define EMBEDDED_LED   LED_BUILTIN
+#define EMBEDDED_LED    LED_BUILTIN
 
 /* LoRa definitions */
 #define PIN_M0          GPIO_NUM_18
