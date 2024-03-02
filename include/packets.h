@@ -36,6 +36,7 @@ typedef struct
     float volt;
     double latitude;
     double longitude;
+    uint8_t satelites;
     //uint16_t fuel_level;
     uint32_t timestamp;
 } radio_packet_t;
