@@ -36,6 +36,7 @@ Ticker ticker1Hz;
 /* Debug variables */
 bool buffer_full = false;
 bool mode = false;
+bool g = false;
 /* Global variables */
 state_t current_state = IDLE_ST;
 //const int Channel = 0x0F;
@@ -49,7 +50,7 @@ void setupVolatilePacket();
 void pinConfig();
 void RadioInit();
 /* Global Functions */
-void gpsInfo();
+bool gpsInfo();
 
 void setup() 
 {
@@ -191,18 +192,22 @@ void setupVolatilePacket()
 }
 
 /* Global Functions */
-void gpsInfo()
+bool gpsInfo()
 {
   if(gps.location.isValid())
   {
     volatile_packet.latitude = gps.location.lat();
     volatile_packet.longitude = gps.location.lng();
+
+    return true;
   }
 
   else
   {
     volatile_packet.latitude = 0;
     volatile_packet.longitude = 0;
+  
+    return false;
   }  
 }
 
