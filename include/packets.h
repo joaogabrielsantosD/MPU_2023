@@ -38,6 +38,7 @@ typedef struct
     double longitude;
     //uint16_t fuel_level;
     uint32_t timestamp;
+    uint8_t sat;
 } radio_packet_t;
 
 // Packet constantly saved

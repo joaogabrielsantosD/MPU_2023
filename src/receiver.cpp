@@ -98,6 +98,7 @@ void loop()
     Serial.print("LONGITUDE: ");      Serial.println(volatile_packet.longitude);
     //Serial.print("FUEL LEVEL: ");     Serial.println(volatile_packet.fuel_level);
     Serial.print("Timestamp: ");      Serial.println(volatile_packet.timestamp);
+    Serial.print("Satellites: ");     Serial.println(volatile_packet.sat);
     Serial.println("----------------------------------------");
     */
 
@@ -128,7 +129,7 @@ bool sdConfig()
 
   if(dataFile)
   {
-    dataFile.println("ACCx,ACCy,ACCz,DPSx,DPSy,DPSz,rpm,speed,motor,flags,SOC,cvt,volt,LAT,LNG,timestamp");
+    dataFile.println("ACCx,ACCy,ACCz,DPSx,DPSy,DPSz,rpm,speed,motor,flags,SOC,cvt,volt,LAT,LNG,timestamp,satellites");
     dataFile.close();
     return true;
   } 
@@ -199,6 +200,8 @@ String packetToString()
     str += String(volatile_packet.longitude);
     str += ",";
     str += String(volatile_packet.timestamp);
+    str += ",";
+    str += String(volatile_packet.sat);
     
     return str;
 }
