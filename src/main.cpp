@@ -135,7 +135,7 @@ void loop()
       : Serial.println("Time: 0h:0m:0s")); 
       //(gps.date.isValid() ? Serial.printf("Date: %d/%d/%d", gps.date.day(), gps.date.month(), gps.date.year()) \
       : Serial.println("Date: 0/0/0"));
-      //Serial.printf("Satellites = %d\r\n", (gps.satellites.isValid() ? gps.satellites.value() : 0));
+      //Serial.printf("Satellites = %d\r\n", volatile_packet.sat);
       //Serial.println("\n\n");
       break;
   }
@@ -189,6 +189,7 @@ void setupVolatilePacket()
   volatile_packet.latitude      = 0; 
   volatile_packet.longitude     = 0; 
   volatile_packet.timestamp     = 0;
+  volatile_packet.sat           = 0;
 }
 
 /* Global Functions */
@@ -198,6 +199,11 @@ bool gpsInfo()
   {
     volatile_packet.latitude = gps.location.lat();
     volatile_packet.longitude = gps.location.lng();
+
+    if(gps.satellites.isValid())
+      volatile_packet.sat = gps.satellites.value();
+    else 
+      volatile_packet.sat = 0;
 
     return true;
   }
