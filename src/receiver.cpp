@@ -96,6 +96,7 @@ void loop()
     Serial.print("VOLT: ");           Serial.println(volatile_packet.volt);
     Serial.print("LATITUDE: ");       Serial.println(volatile_packet.latitude);
     Serial.print("LONGITUDE: ");      Serial.println(volatile_packet.longitude);
+    Serial.print("Satelites: ");      Serial.println(volatile_packet.satelites);
     //Serial.print("FUEL LEVEL: ");     Serial.println(volatile_packet.fuel_level);
     Serial.print("Timestamp: ");      Serial.println(volatile_packet.timestamp);
     Serial.println("----------------------------------------");
@@ -197,6 +198,8 @@ String packetToString()
     str += String(volatile_packet.latitude);
     str += ",";
     str += String(volatile_packet.longitude);
+    str += ",";
+    str += String(volatile_packet.satelites);
     str += ",";
     str += String(volatile_packet.timestamp);
     
