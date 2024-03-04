@@ -111,7 +111,7 @@ void loop()
       while(GPS_uart.available() > 0)
       {
         if(gps.encode(GPS_uart.read()))
-          gpsInfo();         
+          g = gpsInfo();         
       }
 
         /* Send latitude message */
