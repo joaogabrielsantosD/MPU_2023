@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <Ticker.h>
 #include <SD.h>
 #include <EBYTE.h>
 #include "hard_defs_rec.h"
