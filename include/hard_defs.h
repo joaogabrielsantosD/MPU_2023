@@ -19,7 +19,7 @@
 #define CAN_TX_id       GPIO_NUM_15
 #define CAN_RX_id       GPIO_NUM_13
 
-/*GPS definitions*/
+/* GPS definitions */
 #define GPS_uart        Serial1
 #define GPS_RX          GPIO_NUM_23
 #define GPS_TX          GPIO_NUM_19
