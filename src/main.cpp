@@ -131,10 +131,13 @@ void loop()
       //Serial.println("Debug state");
       //Serial.printf("Latitude (LAT) = %lf\r\n", volatile_packet.latitude);
       //Serial.printf("Longitude (LNG) = %lf\r\n", volatile_packet.longitude);
-      //(gps.time.isValid() ? Serial.printf("Time: %dh:%dm:%ds", gps.time.hour(), gps.time.minute(), gps.time.second()) \
-      : Serial.println("Time: 0h:0m:0s")); 
-      //(gps.date.isValid() ? Serial.printf("Date: %d/%d/%d", gps.date.day(), gps.date.month(), gps.date.year()) \
-      : Serial.println("Date: 0/0/0"));
+      
+      // Time and Data in point 0 of the map
+      //(gps.time.isValid() ? Serial.printf("Time: %dh:%dm:%ds\r\n", gps.time.hour(), gps.time.minute(), gps.time.second()) \
+      : Serial.println("Time: 0h:0m:0s\r\n")); 
+      //(gps.date.isValid() ? Serial.printf("Date: %d/%d/%d\r\n", gps.date.day(), gps.date.month(), gps.date.year()) \
+      : Serial.println("Date: 0/0/0\r\n"));
+      
       //Serial.printf("Satellites = %d\r\n", volatile_packet.sat);
       //Serial.println("\n\n");
       break;
@@ -174,21 +177,21 @@ void setupVolatilePacket()
 {
   //volatile_packet.cont          = 0;
   volatile_packet.imu_acc.acc_x = 0;
-  volatile_packet.imu_acc.acc_y = 0;
-  volatile_packet.imu_acc.acc_z = 0;
-  volatile_packet.imu_dps.dps_x = 0;
-  volatile_packet.imu_dps.dps_y = 0;
-  volatile_packet.imu_dps.dps_z = 0;
-  volatile_packet.rpm           = 0;
-  volatile_packet.speed         = 0;
-  volatile_packet.temperature   = 0;
-  volatile_packet.flags         = 0;
-  volatile_packet.SOC           = 0;
-  volatile_packet.cvt           = 0;
-  volatile_packet.volt          = 0;
+  volatile_packet.imu_acc.acc_y = 1;
+  volatile_packet.imu_acc.acc_z = 2;
+  volatile_packet.imu_dps.dps_x = 3;
+  volatile_packet.imu_dps.dps_y = 4;
+  volatile_packet.imu_dps.dps_z = 5;
+  volatile_packet.rpm           = 6;
+  volatile_packet.speed         = 7;
+  volatile_packet.temperature   = 8;
+  volatile_packet.flags         = 9;
+  volatile_packet.SOC           = 10;
+  volatile_packet.cvt           = 11;
+  volatile_packet.volt          = 12;
   volatile_packet.latitude      = 0; 
   volatile_packet.longitude     = 0; 
-  volatile_packet.timestamp     = 0;
+  volatile_packet.timestamp     = 15;
   volatile_packet.sat           = 0;
 }
 
@@ -288,7 +291,7 @@ void ticker500mHzISR()
 {
   state_buffer.push(GPS_ST);
   //state_buffer.push(DEBUG_ST);
-}
+} 
 
 void ticker1HzISR()
 {
