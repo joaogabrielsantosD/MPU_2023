@@ -177,21 +177,21 @@ void setupVolatilePacket()
 {
   //volatile_packet.cont          = 0;
   volatile_packet.imu_acc.acc_x = 0;
-  volatile_packet.imu_acc.acc_y = 1;
-  volatile_packet.imu_acc.acc_z = 2;
-  volatile_packet.imu_dps.dps_x = 3;
-  volatile_packet.imu_dps.dps_y = 4;
-  volatile_packet.imu_dps.dps_z = 5;
-  volatile_packet.rpm           = 6;
-  volatile_packet.speed         = 7;
-  volatile_packet.temperature   = 8;
-  volatile_packet.flags         = 9;
-  volatile_packet.SOC           = 10;
-  volatile_packet.cvt           = 11;
-  volatile_packet.volt          = 12;
+  volatile_packet.imu_acc.acc_y = 0;
+  volatile_packet.imu_acc.acc_z = 0;
+  volatile_packet.imu_dps.dps_x = 0;
+  volatile_packet.imu_dps.dps_y = 0;
+  volatile_packet.imu_dps.dps_z = 0;
+  volatile_packet.rpm           = 0;
+  volatile_packet.speed         = 0;
+  volatile_packet.temperature   = 0;
+  volatile_packet.flags         = 0;
+  volatile_packet.SOC           = 0;
+  volatile_packet.cvt           = 0;
+  volatile_packet.volt          = 0;
   volatile_packet.latitude      = 0; 
   volatile_packet.longitude     = 0; 
-  volatile_packet.timestamp     = 15;
+  volatile_packet.timestamp     = 0;
   volatile_packet.sat           = 0;
 }
 
