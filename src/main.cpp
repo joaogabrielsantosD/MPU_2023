@@ -39,6 +39,7 @@ bool mode = false;
 bool g = false;
 /* Global variables */
 state_t current_state = IDLE_ST;
+uint8_t data[8];
 //const int Channel = 0x0F;
  
 /* Interrupts routine */
@@ -115,13 +116,19 @@ void loop()
       }
 
         /* Send latitude message */
+        memcpy(&data, (uint8_t *)&volatile_packet.latitude, 8);
+
         txMsg.id = LAT_ID;
-        txMsg.data.uint8[0] = volatile_packet.latitude;
+        for(size_t i = 0; i < 8; i++)
+          txMsg.data.uint8[i] = data[i];
         if(CAN.sendFrame(txMsg))
         {
           /* Send longitude message if latitude is successful */
+          memcpy(&data, (uint8_t *)&volatile_packet.longitude, 8);
+
           txMsg.id = LNG_ID;
-          txMsg.data.uint8[0] = volatile_packet.longitude;
+          for(size_t i = 0; i < 8; i++)
+            txMsg.data.uint8[i] = data[i];
           CAN.sendFrame(txMsg);
         }
       
