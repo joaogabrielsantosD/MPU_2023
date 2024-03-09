@@ -53,9 +53,4 @@ typedef struct
 
 } packet_t;
 
-/* DEV DEFINITIONS */
-#include "hard_defs.h"
-
-#define CAN CAN0
-
 #endif

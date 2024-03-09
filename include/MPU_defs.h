@@ -2,8 +2,9 @@
 #define MPU_DEFS_H
 
 #include <Arduino.h>
-#include "packets.h"
-#include "can_defs.h"
+#include "BajaDefs/packets.h"
+#include "BajaDefs/hard_defs.h"
+#include "BajaDefs/can_defs.h"
 
 /* State Machines */
 typedef enum {

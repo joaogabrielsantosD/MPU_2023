@@ -1,16 +1,12 @@
 #include <Arduino.h>
 /* Tools Libraries */
-#include "esp32_can.h"
-#include <EBYTE.h>
+#include <CANmsg.h>
+#include <LoRa/EBYTE.h>
 #include <Ticker.h>
 #include <CircularBuffer.h>
 #include <TinyGPSPlus.h>
 /* User Libraries */
-#include "hard_defs.h"
-#include "can_defs.h"
 #include "MPU_defs.h"
-
-#define GPS_DEBUG
 
 #define MB1 // Uncomment a line if it is your car choice
 //#define MB2 // Uncomment a line if it is your car choice
@@ -23,30 +19,30 @@
   #define CAR_ID MB2_ID
 #endif
 
-/* TOOLS */
+/* GPS tool */
 TinyGPSPlus gps;
+
+/* Radio LoRa tool */
 EBYTE LoRa(&LoRaUART, PIN_M0, PIN_M1, PIN_AUX);
 
 /* ESP TOOLS */
-CAN_FRAME txMsg;
+CANmsg txMsg(CAN_RX_id, CAN_TX_id, CAN_BPS_1000K);
 CircularBuffer<state_t, BUFFER_SIZE/2> state_buffer;
-Ticker ticker400mHz;
-Ticker ticker40Hz;
+Ticker ticker500mHz;
+Ticker ticker1Hz;
 
 /* Debug variables */
 bool buffer_full = false;
-bool GPS_ok = false;
 bool mode = false;
+bool g = false;
 /* Global variables */
 state_t current_state = IDLE_ST;
-typedef struct {uint16_t day=0, month=0, year=0;} Date_acq_t; 
-Date_acq_t Date_acq;
 //const int Channel = 0x0F;
  
 /* Interrupts routine */
 void canISR(CAN_FRAME *rxMsg);
-void ticker400mHzISR();
-void ticker40HzISR();
+void ticker500mHzISR();
+void ticker1HzISR();
 /* Setup Functions */
 void setupVolatilePacket();
 void pinConfig();
@@ -64,18 +60,12 @@ void setup()
   RadioInit(); // Start the LoRa module
 
   /* CAN-BUS initialize */
-  CAN.setCANPins((gpio_num_t)CAN_RX_id, (gpio_num_t)CAN_TX_id);
-  CAN.begin(CAN_BPS_1000K);
-  CAN.watchFor();
-  CAN.setCallback(0, canISR);
-  txMsg.length = 8;
-  txMsg.extended = 0; 
-  txMsg.rtr = 0;
+  txMsg.init(canISR);
 
   setupVolatilePacket(); // volatile packet default values
 
-  ticker400mHz.attach(2.5, ticker400mHzISR);
-  ticker40Hz.attach(0.025, ticker40HzISR);
+  ticker500mHz.attach(2.0, ticker500mHzISR);
+  ticker1Hz.attach(1.0, ticker1HzISR);
 }
 
 void loop()
@@ -113,33 +103,19 @@ void loop()
       while(GPS_uart.available() > 0)
       {
         if(gps.encode(GPS_uart.read()))
-          GPS_ok = gpsInfo();         
+          g = gpsInfo();         
       }
 
-
-      #ifdef GPS_DEBUG
         /* Send latitude message */
-        txMsg.id = LAT_ID;
-        txMsg.data.uint8[0] = volatile_packet.latitude;
-        if(CAN.sendFrame(txMsg))
+        txMsg.clear(LAT_ID);
+        txMsg << volatile_packet.latitude;
+        if(txMsg.write())
         {
           /* Send longitude message if latitude is successful */
-          txMsg.id = LNG_ID;
-          txMsg.data.uint8[0] = volatile_packet.longitude;
-          CAN.sendFrame(txMsg);
+          txMsg.clear(LNG_ID);
+          txMsg << volatile_packet.longitude;
+          txMsg.write();
         }
-      #else
-        /* Send latitude message */
-        txMsg.id = LAT_ID;
-        txMsg.data.uint8[0] = volatile_packet.latitude;
-        if(CAN.sendFrame(txMsg))
-        {
-          /* Send longitude message if latitude is successful */
-          txMsg.id = LNG_ID;
-          txMsg.data.uint8[0] = volatile_packet.longitude;
-          CAN.sendFrame(txMsg);
-        }
-      #endif
       
       break;
 
@@ -147,6 +123,14 @@ void loop()
       //Serial.println("Debug state");
       //Serial.printf("Latitude (LAT) = %lf\r\n", volatile_packet.latitude);
       //Serial.printf("Longitude (LNG) = %lf\r\n", volatile_packet.longitude);
+      
+      // Time and Data in point 0 of the map
+      //(gps.time.isValid() ? Serial.printf("Time: %dh:%dm:%ds\r\n", gps.time.hour(), gps.time.minute(), gps.time.second()) \
+      : Serial.println("Time: 0h:0m:0s\r\n")); 
+      //(gps.date.isValid() ? Serial.printf("Date: %d/%d/%d\r\n", gps.date.day(), gps.date.month(), gps.date.year()) \
+      : Serial.println("Date: 0/0/0\r\n"));
+      
+      //Serial.printf("Satellites = %d\r\n", volatile_packet.sat);
       //Serial.println("\n\n");
       break;
   }
@@ -200,37 +184,32 @@ void setupVolatilePacket()
   volatile_packet.latitude      = 0; 
   volatile_packet.longitude     = 0; 
   volatile_packet.timestamp     = 0;
+  volatile_packet.sat           = 0;
 }
 
 /* Global Functions */
 bool gpsInfo()
 {
-  bool status = false;
-
   if(gps.location.isValid())
   {
     volatile_packet.latitude = gps.location.lat();
     volatile_packet.longitude = gps.location.lng();
 
-    status = true;
+    if(gps.satellites.isValid())
+      volatile_packet.sat = gps.satellites.value();
+    else 
+      volatile_packet.sat = 0;
+
+    return true;
   }
 
   else
   {
     volatile_packet.latitude = 0;
     volatile_packet.longitude = 0;
-
-    status = false;
-  }
-
-  if(gps.date.isValid())
-  {
-    Date_acq.year = gps.date.year();
-    Date_acq.month = gps.date.month();
-    Date_acq.day = gps.date.day();
-  }
-
-  return status;
+  
+    return false;
+  }  
 }
 
 /* Interrupts routine */
@@ -239,35 +218,7 @@ void canISR(CAN_FRAME *rxMsg)
   mode = !mode;
   digitalWrite(EMBEDDED_LED, mode);
 
-  if(rxMsg->id==VOLTAGE_ID)
-  {
-    memcpy(&volatile_packet.volt, (float *)rxMsg->data.uint8, sizeof(float));
-    //Serial.printf("Volt = %f\r\n", volatile_packet.volt);
-  }
-
-  if(rxMsg->id==SOC_ID)
-  {
-    memcpy(&volatile_packet.SOC, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
-    //Serial.printf("SOC = %d\r\n", volatile_packet.SOC);
-  }
-
-  if(rxMsg->id==CVT_ID)
-  {
-    memcpy(&volatile_packet.cvt, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
-    //Serial.printf("CVT = %d\r\n", volatile_packet.cvt);
-  }
-
-  if(rxMsg->id==TEMPERATURE_ID)
-  {
-    memcpy(&volatile_packet.temperature, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
-    //Serial.printf("Motor = %d\r\n", volatile_packet.temperature);
-  }
-
-  if(rxMsg->id==FLAGS_ID)
-  {
-    memcpy(&volatile_packet.flags, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
-    //Serial.printf("Flags = %d\r\n", volatile_packet.flags);
-  }
+  volatile_packet.timestamp = millis();
 
   if(rxMsg->id==IMU_ACC_ID)
   {
@@ -283,7 +234,7 @@ void canISR(CAN_FRAME *rxMsg)
     //Serial.printf("DPS X = %d\r\n", volatile_packet.imu_dps.dps_x);
     //Serial.printf("DPS Y = %d\r\n", volatile_packet.imu_dps.dps_y);
     //Serial.printf("DPS Z = %d\r\n", volatile_packet.imu_dps.dps_z);
-  }  
+  }
 
   if(rxMsg->id==RPM_ID)
   {
@@ -296,15 +247,45 @@ void canISR(CAN_FRAME *rxMsg)
     memcpy(&volatile_packet.speed, (uint16_t *)rxMsg->data.uint8, sizeof(uint16_t));
     //Serial.printf("Speed = %d\r\n", volatile_packet.speed);
   }
+
+  if(rxMsg->id==TEMPERATURE_ID)
+  {
+    memcpy(&volatile_packet.temperature, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("Motor = %d\r\n", volatile_packet.temperature);
+  }
+
+  if(rxMsg->id==FLAGS_ID)
+  {
+    memcpy(&volatile_packet.flags, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("Flags = %d\r\n", volatile_packet.flags);
+  }
+
+  if(rxMsg->id==SOC_ID)
+  {
+    memcpy(&volatile_packet.SOC, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("SOC = %d\r\n", volatile_packet.SOC);
+  }
+
+  if(rxMsg->id==CVT_ID)
+  {
+    memcpy(&volatile_packet.cvt, (uint8_t *)rxMsg->data.uint8, sizeof(uint8_t));
+    //Serial.printf("CVT = %d\r\n", volatile_packet.cvt);
+  }
+
+  if(rxMsg->id==VOLTAGE_ID)
+  {
+    memcpy(&volatile_packet.volt, (float *)rxMsg->data.uint8, sizeof(float));
+    //Serial.printf("Volt = %f\r\n", volatile_packet.volt);
+  }  
 }
 
-void ticker400mHzISR()
+void ticker500mHzISR()
 {
   state_buffer.push(GPS_ST);
   //state_buffer.push(DEBUG_ST);
-}
+} 
 
-void ticker40HzISR()
+void ticker1HzISR()
 {
   state_buffer.push(RADIO_ST);
 } 
