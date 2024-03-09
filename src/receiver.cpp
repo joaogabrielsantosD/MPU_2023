@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <SD.h>
-#include <EBYTE.h>
-#include "hard_defs_rec.h"
-#include "packets.h"
+#include <LoRa/EBYTE.h>
+#include "BajaDefs/hard_defs_rec.h"
+#include "BajaDefs/packets.h"
 
 #define MB1 // Uncomment a line if it is your car choice
 // #define MB2 // Uncomment a line if it is your car choice
