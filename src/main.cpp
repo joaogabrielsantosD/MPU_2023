@@ -1,13 +1,11 @@
 #include <Arduino.h>
 /* Tools Libraries */
-#include "esp32_can.h"
-#include <EBYTE.h>
+#include <CANmsg.h>
+#include <LoRa/EBYTE.h>
 #include <Ticker.h>
 #include <CircularBuffer.h>
 #include <TinyGPSPlus.h>
 /* User Libraries */
-#include "hard_defs.h"
-#include "can_defs.h"
 #include "MPU_defs.h"
 
 #define MB1 // Uncomment a line if it is your car choice
@@ -28,7 +26,7 @@ TinyGPSPlus gps;
 EBYTE LoRa(&LoRaUART, PIN_M0, PIN_M1, PIN_AUX);
 
 /* ESP TOOLS */
-CAN_FRAME txMsg;
+CANmsg txMsg(CAN_RX_id, CAN_TX_id, CAN_BPS_1000K);
 CircularBuffer<state_t, BUFFER_SIZE/2> state_buffer;
 Ticker ticker500mHz;
 Ticker ticker1Hz;
@@ -39,7 +37,6 @@ bool mode = false;
 bool g = false;
 /* Global variables */
 state_t current_state = IDLE_ST;
-uint8_t data[8];
 //const int Channel = 0x0F;
  
 /* Interrupts routine */
@@ -63,13 +60,7 @@ void setup()
   RadioInit(); // Start the LoRa module
 
   /* CAN-BUS initialize */
-  CAN.setCANPins((gpio_num_t)CAN_RX_id, (gpio_num_t)CAN_TX_id);
-  CAN.begin(CAN_BPS_1000K);
-  CAN.watchFor();
-  CAN.setCallback(0, canISR);
-  txMsg.length = 8;
-  txMsg.extended = 0; 
-  txMsg.rtr = 0;
+  txMsg.init(canISR);
 
   setupVolatilePacket(); // volatile packet default values
 
@@ -116,20 +107,14 @@ void loop()
       }
 
         /* Send latitude message */
-        memcpy(&data, (uint8_t *)&volatile_packet.latitude, 8);
-
-        txMsg.id = LAT_ID;
-        for(size_t i = 0; i < 8; i++)
-          txMsg.data.uint8[i] = data[i];
-        if(CAN.sendFrame(txMsg))
+        txMsg.clear(LAT_ID);
+        txMsg << volatile_packet.latitude;
+        if(txMsg.write())
         {
           /* Send longitude message if latitude is successful */
-          memcpy(&data, (uint8_t *)&volatile_packet.longitude, 8);
-
-          txMsg.id = LNG_ID;
-          for(size_t i = 0; i < 8; i++)
-            txMsg.data.uint8[i] = data[i];
-          CAN.sendFrame(txMsg);
+          txMsg.clear(LNG_ID);
+          txMsg << volatile_packet.longitude;
+          txMsg.write();
         }
       
       break;
